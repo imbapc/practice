@@ -11,39 +11,39 @@ import re
 NAMES_FINISHED = []  # 已抓取的linkedin用户
 
 
-def login(laccount, lpassword):
-    client = requests.Session()
+# def login(laccount, lpassword):
+#     client = requests.Session()
+#
+#     HOMEPAGE_URL = 'https://www.linkedin.com'
+#     LOGIN_URL = 'https://www.linkedin.com/uas/login-submit'
+#
+#     html = client.get(HOMEPAGE_URL).text
+#     csrf = re.findall('"loginCsrfParam" value="(.*?)"', html)
+#
+#     login_information = {
+#         'session_key': laccount,
+#         'session_password': lpassword,
+#         'loginCsrfParam': csrf[0],
+#         'trk': 'guest_homepage-basic_sign-in-submit'
+#     }
+#
+#     client.post(LOGIN_URL, data=login_information)
+#     client.get(HOMEPAGE_URL)
+#     return client
 
-    HOMEPAGE_URL = 'https://www.linkedin.com'
-    LOGIN_URL = 'https://www.linkedin.com/uas/login-submit'
 
-    html = client.get(HOMEPAGE_URL).text
-    csrf = re.findall('"loginCsrfParam" value="(.*?)"', html)
-
-    login_information = {
-        'session_key': laccount,
-        'session_password': lpassword,
-        'loginCsrfParam': csrf[0],
-        'trk': 'guest_homepage-basic_sign-in-submit'
-    }
-
-    client.post(LOGIN_URL, data=login_information)
-    client.get(HOMEPAGE_URL)
-    return client
-
-
-def parse(content, url, log_filename, employee):
-    """ 解析一个员工的Linkedin主页 """
-    content = unquote(content.decode("utf-8")).replace('&quot;', '"')
-    occupation = re.findall('"headline":"(.*?)"', content)
-    if occupation:
-        employee["Occupation"] = occupation[0]
-        print('.', end='', flush=True)
-    else:
-        print('.', end='', flush=True)
-        with open(log_filename, 'a') as f:
-            f.write("not a valid employee %s\n" % url)
-    time.sleep(5)
+# def parse(content, url, log_filename, employee):
+#     """ 解析一个员工的Linkedin主页 """
+#     content = unquote(content.decode("utf-8")).replace('&quot;', '"')
+#     occupation = re.findall('"headline":"(.*?)"', content)
+#     if occupation:
+#         employee["Occupation"] = occupation[0]
+#         print('.', end='', flush=True)
+#     else:
+#         print('.', end='', flush=True)
+#         with open(log_filename, 'a') as f:
+#             f.write("not a valid employee %s\n" % url)
+#     time.sleep(5)
 
 
 def write_csv(result_employee, company_name):
@@ -53,45 +53,45 @@ def write_csv(result_employee, company_name):
         writer.writerow(result_employee)
 
 
-def crawl(url, s, log_filename, employee):
-    """ 抓取每一个搜索结果 """
-    try:
-        failure = 0
-        while failure < 10:
-            try:
-                r = s.get(url, timeout=100)
-            except Exception as e:
-                failure += 1
-                continue
-            if r.status_code == 200:
-                parse(r.content, url, log_filename, employee)
-                break
-            else:
-                print('.', end='', flush=True)
-                with open(log_filename, 'a') as f:
-                    f.write('%s %s\n' % (r.status_code, url))
-                failure += 2
-        if failure >= 10:
-            print('.', end='', flush=True)
-            with open(log_filename, 'a') as f:
-                f.write('Failed: %s\n' % url)
-        else:
-            print('.', end='', flush=True)
-            with open(log_filename, 'a') as f:
-                f.write("already exists : %s\n" %url)
-    except Exception as e:
-        pass
+# def crawl(url, s, log_filename, employee):
+#     """ 抓取每一个搜索结果 """
+#     try:
+#         failure = 0
+#         while failure < 10:
+#             try:
+#                 r = s.get(url, timeout=100)
+#             except Exception as e:
+#                 failure += 1
+#                 continue
+#             if r.status_code == 200:
+#                 parse(r.content, url, log_filename, employee)
+#                 break
+#             else:
+#                 print('.', end='', flush=True)
+#                 with open(log_filename, 'a') as f:
+#                     f.write('%s %s\n' % (r.status_code, url))
+#                 failure += 2
+#         if failure >= 10:
+#             print('.', end='', flush=True)
+#             with open(log_filename, 'a') as f:
+#                 f.write('Failed: %s\n' % url)
+#         else:
+#             print('.', end='', flush=True)
+#             with open(log_filename, 'a') as f:
+#                 f.write("already exists : %s\n" %url)
+#     except Exception as e:
+#         pass
 
 
 if __name__ == '__main__':
-    detailed_search = input('Do you want to log in to Linkedin To get more information? Yes/No: - [default:No]\n').lower()
-    if detailed_search == 'yes' or detailed_search == 'y':
-        detailed_search = True
-        laccount = input('Input account email:')
-        lpassword = getpass.getpass('Input account password:')
-        s = login(laccount=laccount, lpassword=lpassword)
-    else:
-        detailed_search = False
+    # detailed_search = input('Do you want to log in to Linkedin To get more information? Yes/No: - [default:No]\n').lower()
+    # if detailed_search == 'yes' or detailed_search == 'y':
+    #     detailed_search = True
+    #     laccount = input('Input account email:')
+    #     lpassword = getpass.getpass('Input account password:')
+    #     s = login(laccount=laccount, lpassword=lpassword)
+    # else:
+    #     detailed_search = False
     company_name = input('Input the company name:')
     print('Application is preparing data now', end='', flush=True)
     log_filename = company_name+'log.txt'
@@ -138,12 +138,12 @@ if __name__ == '__main__':
                             elif additional_search and not titleoccupation:
                                 employee_result = {"Name": employee_name, "Occupation":
                                     additional_search, "LinkedIn-url": employee[0]}
-                            elif detailed_search and not titleoccupation:
-                                employee_result = {"Name": employee_name, "Occupation":
-                                    " ", "LinkedIn-url": employee[0]}
-                                employee_result['LinkedIn-url'] = employee_result['LinkedIn-url'].replace(
-                                    "nz.linkedin.com", "www.linkedin.com")
-                                crawl(employee_result['LinkedIn-url'], copy.deepcopy(s), log_filename, employee_result)
+                            # elif detailed_search and not titleoccupation:
+                            #     employee_result = {"Name": employee_name, "Occupation":
+                            #         " ", "LinkedIn-url": employee[0]}
+                            #     employee_result['LinkedIn-url'] = employee_result['LinkedIn-url'].replace(
+                            #         "nz.linkedin.com", "www.linkedin.com")
+                            #     crawl(employee_result['LinkedIn-url'], copy.deepcopy(s), log_filename, employee_result)
                             elif not titleoccupation:
                                 employee_result = {"Name": employee_name, "Occupation":
                                 " ", "LinkedIn-url": employee[0]}
