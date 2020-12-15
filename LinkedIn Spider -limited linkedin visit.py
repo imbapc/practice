@@ -114,33 +114,41 @@ if __name__ == '__main__':
             try:
                 r = requests.get(url, timeout=10)
                 if r.status_code == 200:
-                    employees = re.findall('<a href="/url\?q=(https://nz.linkedin.com/in/.*?)[\/]?&amp.*?><h3 class="zBAuLc"><div class="BNeawe vvjwJb AP7Wnd">(.*?)[\s]?-[\s](.*?)[\s]?[\-\|][\s]?LinkedIn</div>', r.text)
+                    employees = re.findall('<a href="/url\?q=(https://nz.linkedin.com/in/.*?)[\/]?&amp.*?><h3 class="zBAuLc"><div class="BNeawe vvjwJb AP7Wnd">(.*?)[\s]?-[\s](.*?)[\s]?[\-\|][\s]?(.*?)</div>', r.text)
                     for index in range(len(employees)):
                         employee = employees[index]
                         nameindex = employee[1].rfind(">")
-                        occupationindex = max(employee[2].rfind('%s' %s) for s in ('-', '...'))
                         employee_name = employee[1][nameindex + 1:]
-                        additional_search = re.findall('(?i)%s [\|](.*?) at %s' %(employee_name, company_name), r.text)
-                        if additional_search:
-                            additional_searchindex = max(additional_search[0].rfind('%s' % s) for s in ('.', '|'))
-                            additional_search = additional_search[0][additional_searchindex+1:]
-                        company_to_check = employee[2][occupationindex + 1:]
+                        if company_name.lower() in employee[3].lower():
+                            titleoccupation = True
+                            occupation = employee[2]
+                            companyindex = max(employee[3].rfind('%s' %s) for s in ('-', '|'))
+                            company_to_check = employee[3][:companyindex]
+                        else:
+                            titleoccupation = False
+                            company_to_check = employee[2]
+                            additional_search = re.findall('(?i)%s [\|](.*?) at %s' %(employee_name, company_name), r.text)
+                            if additional_search:
+                                additional_searchindex = max(additional_search[0].rfind('%s' % s) for s in ('.', '|'))
+                                additional_search = additional_search[0][additional_searchindex+1:]
+                        print(company_to_check)
                         if company_to_check.strip().lower() == company_name.strip().lower():
-                            if additional_search and occupationindex == -1:
+                            if titleoccupation:
+                                employee_result = {"Name": employee_name, "Occupation":
+                                    occupation, "LinkedIn-url": employee[0]}
+                            elif additional_search and not titleoccupation:
                                 employee_result = {"Name": employee_name, "Occupation":
                                     additional_search, "LinkedIn-url": employee[0]}
-                            elif occupationindex == -1 and detailed_search:
+                            elif detailed_search and not titleoccupation:
                                 employee_result = {"Name": employee_name, "Occupation":
                                     " ", "LinkedIn-url": employee[0]}
-                                employee_result['LinkedIn-url'] = employee_result['LinkedIn-url'].replace("nz.linkedin.com", "www.linkedin.com")
+                                employee_result['LinkedIn-url'] = employee_result['LinkedIn-url'].replace(
+                                    "nz.linkedin.com", "www.linkedin.com")
                                 crawl(employee_result['LinkedIn-url'], copy.deepcopy(s), log_filename, employee_result)
-                            elif occupationindex == -1:
+                            elif not titleoccupation:
                                 employee_result = {"Name": employee_name, "Occupation":
-                                    " ", "LinkedIn-url": employee[0]}
+                                " ", "LinkedIn-url": employee[0]}
                                 num_of_fail_occupation_employee += 1
-                            else:
-                                employee_result = {"Name": employee_name, "Occupation":
-                                employee[2][:occupationindex], "LinkedIn-url": employee[0]}
                             if employee_name not in NAMES_FINISHED:
                                 NAMES_FINISHED.append(employee_name)
                                 results.append(employee_result["LinkedIn-url"])
