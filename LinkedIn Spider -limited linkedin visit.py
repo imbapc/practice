@@ -12,7 +12,6 @@ NAMES_FINISHED = []  # 已抓取的linkedin用户
 
 
 def login(laccount, lpassword):
-    """ 根据账号密码登录linkedin """
     client = requests.Session()
 
     HOMEPAGE_URL = 'https://www.linkedin.com'
